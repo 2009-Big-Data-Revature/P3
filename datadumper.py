@@ -75,7 +75,7 @@ def convert_line_endings(file_path):
         file.write(content)
     print(f"Converted line endings for: {file_path}")
 
-def extract_zip(zip_directory, extract_location):
+def extract_zip(zip_directory, extract_location, convertToWindows=True):
     # Get a list of all ZIP files in the directory
     zip_files = [os.path.join(zip_directory, f) for f in os.listdir(zip_directory) if f.endswith('.zip')]
     
@@ -92,10 +92,11 @@ def extract_zip(zip_directory, extract_location):
             zip_ref.extractall(state_folder)
             print(f"Extracted {zip_file} into {state_folder}")
 
-            for root, dirs, files in os.walk(state_folder):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    convert_line_endings(file_path)
+            if convertToWindows is True:
+                for root, dirs, files in os.walk(state_folder):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        convert_line_endings(file_path)
 
 year = '2010'
 states = ['Puerto Rico', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
