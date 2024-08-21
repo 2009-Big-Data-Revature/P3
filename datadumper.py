@@ -56,6 +56,25 @@ def dump_data(base_url, location):
     elif(status_code == 404):
         print(f"Error 404 Not Found For {base_url}")
 
+'''
+These files have been constructed in a LINUX environment. They use an ASCII linefeed, chr(10), to indicate a new record.
+
+For successful use with many programs running in a Windows environment, these files need to be modified to use the 
+ASCII carriage return/linefeed sequence, chr(13) + chr(10) as a record terminator.
+'''
+def convert_line_endings(file_path):
+    # Read the file with Linux line endings
+    with open(file_path, 'r', newline='\n') as file:
+        content = file.read()
+    
+    # Convert to Windows line endings
+    content = content.replace('\n', '\r\n')
+    
+    # Write back with Windows line endings
+    with open(file_path, 'w', newline='\r\n') as file:
+        file.write(content)
+    print(f"Converted line endings for: {file_path}")
+
 def extract_zip(zip_directory, extract_location):
     # Get a list of all ZIP files in the directory
     zip_files = [os.path.join(zip_directory, f) for f in os.listdir(zip_directory) if f.endswith('.zip')]
@@ -72,6 +91,11 @@ def extract_zip(zip_directory, extract_location):
         with zipfile.ZipFile(zip_file, 'r') as zip_ref:
             zip_ref.extractall(state_folder)
             print(f"Extracted {zip_file} into {state_folder}")
+
+            for root, dirs, files in os.walk(state_folder):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    convert_line_endings(file_path)
 
 year = '2010'
 states = ['Puerto Rico', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
