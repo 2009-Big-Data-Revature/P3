@@ -103,6 +103,8 @@ if __name__ == "__main__":
                 dump_data('https://www2.census.gov/census_' + year + '/redistricting_file--pl_94-171/' + state +'/', f'dump/{state}')
             case "2000":
                 dump_data('https://www2.census.gov/census_' + year + '/datasets/redistricting_file--pl_94-171/' + state +'/', f'dump/{state}')
+            case "2020":
+                dump_data('https://www2.census.gov/programs-surveys/decennial/' + year + '/data/01-Redistricting_File--PL_94-171/' + state +'/', f'dump/{state}')
 
     # Then it will extract all the folders
     for state in tqdm(states):
