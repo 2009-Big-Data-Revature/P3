@@ -276,3 +276,4 @@ for state_name, state_abbreviation in states:
     os.rmdir(save_dir)
 
     print(f"Data appended to {csv_file_path} and files removed.")
+
