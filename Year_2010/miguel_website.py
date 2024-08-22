@@ -2,10 +2,17 @@ import requests
 from bs4 import BeautifulSoup
 import os
 import zipfile
-from tqdm import tqdm
-import threading
 
-# Function to download a zip file
+
+import os
+working_dir =os.path.dirname(os.path.realpath(__file__))
+
+dump_path =  working_dir + "/data_dump"
+if not os.path.exists(dump_path):
+    os.makedirs(dump_path)
+
+extracted_path =  working_dir + "/extracted_data"
+
 def download_zip(link, location):
     zip_file_response = requests.get(link)
     status_code = zip_file_response.status_code
@@ -24,76 +31,90 @@ def download_zip(link, location):
             print(f"File downloaded and saved as {file_path}")
     else:
         print(f"Failed to download the file. Status code: {status_code}")
+            
+'''
+A few useful status codes
 
-# Function to start downloading files in threads
-def download_files_in_threads(url_list, location):
-    threads = []
-    for url in url_list:
-        thread = threading.Thread(target=download_zip, args=(url, location))
-        thread.start()
-        threads.append(thread)
-    
-    # Wait for all threads to complete
-    for thread in threads:
-        thread.join()
-
-# Function to extract a zip file
-def extract_zip(zip_file, extract_location):
-    with zipfile.ZipFile(zip_file, 'r') as zip_ref:
-        zip_ref.extractall(extract_location)
-        print(f"Extracted {zip_file} into {extract_location}")
-
-# Function to start extracting files in threads
-def extract_files_in_threads(zip_files, extract_location):
-    threads = []
-    for zip_file in zip_files:
-        thread = threading.Thread(target=extract_zip, args=(zip_file, extract_location))
-        thread.start()
-        threads.append(thread)
-    
-    # Wait for all threads to complete
-    for thread in threads:
-        thread.join()
-
-# Function to dump data from a base URL
+    Status Codes
+    200 : Success (OK)
+    201 : Created
+    202 : Accepted
+    204: No Content
+    205 : Reset Content
+    400 : Bad Request
+    401 : Unauthorized
+    403 : Forbidden
+    404 : Not Found
+'''
 def dump_data(base_url, location):
     r = requests.get(base_url)
+    r.headers['content-type']
     status_code = r.status_code
     print(f"Status Code: {status_code}")
 
-    if status_code == 200:
+    if(status_code == 200):
         soup = BeautifulSoup(r.text, 'html.parser')
-        zip_urls = []
+
         for anchor in soup.find_all('a'):
             href = anchor.get('href')
-            if href and href.endswith('.zip'):
+            if href and href.endswith('.pl.zip'):
                 zip_file_name = href
                 print(f"Found file: {zip_file_name}")
-                zip_urls.append(base_url + zip_file_name)
-
-        # Download all zip files concurrently
-        download_files_in_threads(zip_urls, location)
-    elif status_code == 404:
+                zip_url = base_url + zip_file_name
+                download_zip(zip_url, location)
+    elif(status_code == 404):
         print(f"Error 404 Not Found For {base_url}")
 
-if __name__ == "__main__":
-    year = '2010'
-    states = ["Alaska", "Arizona", "Arkansas", "District_of_Columbia", \
+'''
+These files have been constructed in a LINUX environment. They use an ASCII linefeed, chr(10), to indicate a new record.
+
+For successful use with many programs running in a Windows environment, these files need to be modified to use the 
+ASCII carriage return/linefeed sequence, chr(13) + chr(10) as a record terminator.
+'''
+def convert_line_endings(file_path):
+    # Read the file with Linux line endings
+    with open(file_path, 'r', newline='\n') as file:
+        content = file.read()
+    
+    # Convert to Windows line endings
+    content = content.replace('\n', '\r\n')
+    
+    # Write back with Windows line endings
+    with open(file_path, 'w', newline='\r\n') as file:
+        file.write(content)
+    print(f"Converted line endings for: {file_path}")
+
+def extract_zip(zip_directory, extract_location):
+    # Get a list of all ZIP files in the directory
+    zip_files = [os.path.join(zip_directory, f) for f in os.listdir(zip_directory) if f.endswith('.zip')]
+    
+    for zip_file in zip_files:
+        # Extract the state name from the ZIP file name (assuming it's the first part)
+        state_name = os.path.basename(zip_file).split('.')[0]
+        
+        # Create a directory for the state if it doesn't exist
+        state_folder = os.path.join(extract_location, state_name)
+        os.makedirs(state_folder, exist_ok=True)
+        
+        # Open the ZIP file and extract its contents into the state folder
+        with zipfile.ZipFile(zip_file, 'r') as zip_ref:
+            zip_ref.extractall(state_folder)
+            print(f"Extracted {zip_file} into {state_folder}")
+
+            # for root, dirs, files in os.walk(state_folder):
+            #     for file in files:
+            #         file_path = os.path.join(root, file)
+            #         convert_line_endings(file_path)
+
+year = '2010'
+states = ["Alaska", "Arizona", "Arkansas", "District_of_Columbia", \
               "Florida", "Georgia", "Hawaii", "Idaho", "Indiana", \
               "Kansas", "Louisiana"]
 
-    # Will dump all the data first
-    for state in tqdm(states):
-        state = state.replace(' ', '_')
-        os.makedirs(f"data_dump/{state}", exist_ok=True)
-        os.makedirs(f"extracted_data/{state}", exist_ok=True)
-        match year:
-            case "2010":
-                dump_data('https://www2.census.gov/census_' + year + '/redistricting_file--pl_94-171/' + state +'/', f'dump/{state}')
-            case "2000":
-                dump_data('https://www2.census.gov/census_' + year + '/datasets/redistricting_file--pl_94-171/' + state +'/', f'dump/{state}')
+# Will dump all the data first
+for state in states:
+    state = state.replace(' ', '_')
+    dump_data('https://www2.census.gov/census_' + year + '/redistricting_file--pl_94-171/' + state +'/', dump_path)
 
-    # Then it will extract all the folders
-    for state in tqdm(states):
-        zip_files = [os.path.join(f'dump/{state}', f) for f in os.listdir(f'dump/{state}') if f.endswith('.zip')]
-        extract_files_in_threads(zip_files, f'extracted_data/{state}')
+# Then it will extract all the folders
+extract_zip(dump_path, extracted_path)
