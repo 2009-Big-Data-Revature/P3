@@ -91,47 +91,36 @@ for state_name, state_abbreviation in states:
 
     print(f"Downloaded and extracted files to: {save_dir}")
 
-    # Step 1: Read the pipe-delimited file into a DataFrame
+    # Read the pipe-delimited file into a DataFrame
     data_file_path = os.path.join(save_dir, f'{state_abbreviation}geo2020.pl')
     df = pd.read_csv(data_file_path, delimiter='|', header=None, low_memory=False, encoding='ISO-8859-1')
 
-    # Step 2: Rename the columns to numbers
+    # Rename the columns to numbers
     df.columns = range(df.shape[1])
 
+    # Select the columns you want to keep
+    columns_to_keep = [1, 2, 10]
 
-    # In[118]:
-
-
-    # Step 1: Select the columns you want to keep
-    columns_to_keep = [1, 2, 10, 11, 84, 85, 86, 87, 91, 92, 93]
-
-    # Step 2: Create a new DataFrame with only the selected columns
+    # Create a new DataFrame with only the selected columns
     df_filtered = df[columns_to_keep]
 
-    # Step 3: Rename the columns
+    # Rename the columns
     df_filtered.columns = [
         "State Abv",
         "Summary Code",
-        "Region",
-        "Division",
-        "Area (Land)",
-        "Area (Water)",
-        "Area Base Name",
-        "Area Legal-Name",
-        "Housing Unit Count",
-        "Latitude",
-        "Longitude"
+        "Region"
     ]
 
     df = df_filtered
 
-    # Step 1: Define the values you want to keep
+
+    # Define the Summary Codes to keep
     valid_codes = [40, 50, 60]
 
-    # Step 2: Filter the DataFrame to keep only the rows where "Summary Code" is in the list
+    # Filter the DataFrame to keep only the rows where "Summary Code" is in the list
     df_filtered = df[df["Summary Code"].isin(valid_codes)]
 
-    # Step 3: Display the filtered DataFrame
+    # Display the filtered DataFrame
     df = df_filtered
 
 
@@ -141,11 +130,11 @@ for state_name, state_abbreviation in states:
     df_1 = pd.read_csv(data_file_path, delimiter='|', header=None, low_memory=False)
 
 
-    # Step 2: Rename the columns to numbers
+    # Rename the columns to numbers
     df_1.columns = range(df_1.shape[1])
 
     # Define the list of columns to keep
-    columns_to_keep = [76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 103, 124, 140, 147]
+    columns_to_keep = [76, 77, 78, 80, 81, 82, 83, 84, 85, 86]
 
     # Create a new DataFrame with only the selected columns
     df_filtered = df_1[columns_to_keep]
@@ -155,7 +144,6 @@ for state_name, state_abbreviation in states:
         "Total Population",
         "Hispanic or Latino",
         "Not Hispanic or Latino",
-        "Population of One Race",
         "White",
         "African-American",
         "American Indian",
@@ -163,10 +151,7 @@ for state_name, state_abbreviation in states:
         "Pacific Islander",
         "Other",
         "Population of Two Races",
-        "Population of Three Races",
-        "Population of Four Races",
-        "Population of Five Races",
-        "Population of Six Races"
+
     ]
 
 
@@ -174,74 +159,16 @@ for state_name, state_abbreviation in states:
 
     df_1 = df_1.head(num_rows_to_keep)
 
-    # Step 1: Read the pipe-delimited file into a DataFrame
-    data_file_path = os.path.join(save_dir, f'{state_abbreviation}000022020.pl')
-    df_2 = pd.read_csv(data_file_path, delimiter='|', header=None, low_memory=False)
+    # Combine the DataFrames along the columns
+    combined_df = pd.concat([df, df_1], axis=1)
+
     
-    
-    df_2 = df_2.head(num_rows_to_keep)
-    # Step 2: Rename the columns to numbers
-    df_2.columns = range(df_2.shape[1])
-
-    # Define the list of columns to keep
-    columns_to_keep = [149, 150, 151]
-
-    # Create a new DataFrame with only the selected columns
-    df_filtered = df_2[columns_to_keep]
-
-    # Create Column Names
-    df_filtered.columns = [
-        "Total Housing Units",
-        "Occupied Housing Units",
-        "Vacant Housing Units"
-    ]
-
-    df_2 = df_filtered
-
-
-    # Step 1: Read the pipe-delimited file into a DataFrame
-    data_file_path = os.path.join(save_dir, f'{state_abbreviation}000032020.pl')
-    df_3 = pd.read_csv(data_file_path, delimiter='|', header=None, low_memory=False)
-    
-    df_3 = df_3.head(num_rows_to_keep)
-    # Step 2: Rename the columns to numbers
-    df_3.columns = range(df_3.shape[1])
-
-    # Step 1: Define the list of columns to keep
-    columns_to_keep = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-
-    # Step 2: Create a new DataFrame with only the selected columns
-    df_filtered = df_3[columns_to_keep]
-
-    # Step 3: Define the list of new column names
-    new_column_names = [
-        "Total Group Population",
-        "Institutionalized",
-        "Adult-Correctional",
-        "Juvenile-Correctional",
-        "Nursing",
-        "Other",
-        "Non-Institutionalized",
-        "Student Housing",
-        "Military Quarters",
-        "Other Non-Institutional Facilities"
-    ]
-
-    # Step 4: Assign the new column names to the DataFrame
-    df_filtered.columns = new_column_names
-
-
-    df_3 = df_filtered
-
-    # Step 1: Combine the DataFrames along the columns
-    combined_df = pd.concat([df, df_1,  df_2, df_3], axis=1)
-
-    # Step 2: Display the resulting DataFrame (optional)
     df = combined_df
-    df['year']=2020
-
+    # Add Year Column
+    df["year"] = 2020
+    
     # Assuming there's a specific CSV file you're working with
-    csv_file_path = 'clean/2020_cleaned_data.csv'  # Corrected this line
+    csv_file_path = 'clean/2020_cleaned_data.csv'
 
     # Check if the CSV exists and append the DataFrame
     if os.path.exists(csv_file_path):
