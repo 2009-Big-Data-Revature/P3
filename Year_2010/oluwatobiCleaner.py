@@ -1,5 +1,6 @@
 import os
 import csv
+
 folderName = "2010"
 
 file_names = ["000012010", "000022010", "geo2010"]
@@ -95,24 +96,25 @@ for state in state_and_abrv.keys():
     abrv = state_and_abrv[state]
     for file_name in file_names:
         file_path = f"{extracted_path}/{abrv}{folderName}/{abrv}{file_name}.pl"
+        new_file_path = stat_folder + "/" + abrv + file_name+".csv"
+        print(file_path)
         if file_name == "geo2010":
-            print(file_path)
             lis = open_Folder(file_path).split("\n")
             rows = list()
-            getGeoRows(lis, rows)
-            new_file_path = stat_folder + "/" + abrv + file_name+".csv"
-            print(new_file_path)
             if not os.path.exists(new_file_path):
-                writeCSV(new_file_path, geo_headers, rows)
+                getGeoRows(lis, rows)
+                print(new_file_path)
+                if not os.path.exists(new_file_path):
+                    writeCSV(new_file_path, geo_headers, rows)
         else:
             lis = open_Folder(file_path).split("\n")
             rows = list()
-            getRows(lis, rows)
-            new_file_path = stat_folder + "/" + abrv + file_name+".csv"
-            print(new_file_path)
             if not os.path.exists(new_file_path):
-                if file_name == "000012010":
-                    writeCSV(new_file_path, headers_00001, rows)
-                else:
-                    writeCSV(new_file_path, headers_00002, rows)
+                getRows(lis, rows)
+                print(new_file_path)
+                if not os.path.exists(new_file_path):
+                    if file_name == "000012010":
+                        writeCSV(new_file_path, headers_00001, rows)
+                    else:
+                        writeCSV(new_file_path, headers_00002, rows)
 print("end")
