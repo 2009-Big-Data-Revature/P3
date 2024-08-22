@@ -91,6 +91,7 @@ for state_name, state_abbreviation in states:
 
     print(f"Downloaded and extracted files to: {save_dir}")
 
+<<<<<<< HEAD
     # Read the pipe-delimited file into a DataFrame
     data_file_path = os.path.join(save_dir, f'{state_abbreviation}geo2020.pl')
     df = pd.read_csv(data_file_path, delimiter='|', header=None, low_memory=False, encoding='ISO-8859-1')
@@ -105,6 +106,26 @@ for state_name, state_abbreviation in states:
     df_filtered = df[columns_to_keep]
 
     # Rename the columns
+=======
+    # Step 1: Read the pipe-delimited file into a DataFrame
+    data_file_path = os.path.join(save_dir, f'{state_abbreviation}geo2020.pl')
+    df = pd.read_csv(data_file_path, delimiter='|', header=None, low_memory=False, encoding='ISO-8859-1')
+
+    # Step 2: Rename the columns to numbers
+    df.columns = range(df.shape[1])
+
+
+    # In[118]:
+
+
+    # Step 1: Select the columns you want to keep
+    columns_to_keep = [1, 2, 10, 11, 84, 85, 86, 87, 91, 92, 93]
+
+    # Step 2: Create a new DataFrame with only the selected columns
+    df_filtered = df[columns_to_keep]
+
+    # Step 3: Rename the columns
+>>>>>>> 9c1d7d8 (rebased year_2020)
     df_filtered.columns = [
         "State Abv",
         "Summary Code",
@@ -122,6 +143,7 @@ for state_name, state_abbreviation in states:
     df = df_filtered
 
 
+<<<<<<< HEAD
     # Define the Summary Codes to keep
     valid_codes = [40, 50, 60]
 
@@ -129,6 +151,18 @@ for state_name, state_abbreviation in states:
     df_filtered = df[df["Summary Code"].isin(valid_codes)]
 
     # Display the filtered DataFrame
+=======
+    # In[119]:
+
+
+    # Step 1: Define the values you want to keep
+    valid_codes = [40, 50, 60]
+
+    # Step 2: Filter the DataFrame to keep only the rows where "Summary Code" is in the list
+    df_filtered = df[df["Summary Code"].isin(valid_codes)]
+
+    # Step 3: Display the filtered DataFrame
+>>>>>>> 9c1d7d8 (rebased year_2020)
     df = df_filtered
 
 
@@ -138,7 +172,11 @@ for state_name, state_abbreviation in states:
     df_1 = pd.read_csv(data_file_path, delimiter='|', header=None, low_memory=False)
 
 
+<<<<<<< HEAD
     # Rename the columns to numbers
+=======
+    # Step 2: Rename the columns to numbers
+>>>>>>> 9c1d7d8 (rebased year_2020)
     df_1.columns = range(df_1.shape[1])
 
     # Define the list of columns to keep
@@ -171,7 +209,11 @@ for state_name, state_abbreviation in states:
 
     df_1 = df_1.head(num_rows_to_keep)
 
+<<<<<<< HEAD
     # Read the pipe-delimited file into a DataFrame
+=======
+    # Step 1: Read the pipe-delimited file into a DataFrame
+>>>>>>> 9c1d7d8 (rebased year_2020)
     data_file_path = os.path.join(save_dir, f'{state_abbreviation}000022020.pl')
     df_2 = pd.read_csv(data_file_path, delimiter='|', header=None, low_memory=False)
     
@@ -211,7 +253,11 @@ for state_name, state_abbreviation in states:
     df_2 = df_filtered
 
 
+<<<<<<< HEAD
     # Read the pipe-delimited file into a DataFrame
+=======
+    # Step 1: Read the pipe-delimited file into a DataFrame
+>>>>>>> 9c1d7d8 (rebased year_2020)
     data_file_path = os.path.join(save_dir, f'{state_abbreviation}000032020.pl')
     df_3 = pd.read_csv(data_file_path, delimiter='|', header=None, low_memory=False)
     
@@ -219,6 +265,7 @@ for state_name, state_abbreviation in states:
     # Step 2: Rename the columns to numbers
     df_3.columns = range(df_3.shape[1])
 
+<<<<<<< HEAD
     # Define the list of columns to keep
     columns_to_keep = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
@@ -226,6 +273,15 @@ for state_name, state_abbreviation in states:
     df_filtered = df_3[columns_to_keep]
 
     # Define the list of new column names
+=======
+    # Step 1: Define the list of columns to keep
+    columns_to_keep = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+    # Step 2: Create a new DataFrame with only the selected columns
+    df_filtered = df_3[columns_to_keep]
+
+    # Step 3: Define the list of new column names
+>>>>>>> 9c1d7d8 (rebased year_2020)
     new_column_names = [
         "Total Group Population",
         "Institutionalized",
@@ -239,12 +295,17 @@ for state_name, state_abbreviation in states:
         "Other Non-Institutional Facilities"
     ]
 
+<<<<<<< HEAD
     # Assign the new column names to the DataFrame
+=======
+    # Step 4: Assign the new column names to the DataFrame
+>>>>>>> 9c1d7d8 (rebased year_2020)
     df_filtered.columns = new_column_names
 
 
     df_3 = df_filtered
 
+<<<<<<< HEAD
     # Combine the DataFrames along the columns
     combined_df = pd.concat([df, df_1,  df_2, df_3], axis=1)
 
@@ -255,6 +316,16 @@ for state_name, state_abbreviation in states:
     
     # Assuming there's a specific CSV file you're working with
     csv_file_path = 'clean/2020_cleaned_data.csv'
+=======
+    # Step 1: Combine the DataFrames along the columns
+    combined_df = pd.concat([df, df_1,  df_2, df_3], axis=1)
+
+    # Step 2: Display the resulting DataFrame (optional)
+    df = combined_df
+
+    # Assuming there's a specific CSV file you're working with
+    csv_file_path = 'clean/2020_cleaned_data.csv'  # Corrected this line
+>>>>>>> 9c1d7d8 (rebased year_2020)
 
     # Check if the CSV exists and append the DataFrame
     if os.path.exists(csv_file_path):
