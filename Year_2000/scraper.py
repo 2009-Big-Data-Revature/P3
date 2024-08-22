@@ -58,3 +58,6 @@ class HeaderScraper:
     def __getitem__(self, category: str):
         #Allows object of class to be indexed by name of desired table (ex: HeaderScraper['geo'] returns the dataframe for the geo headers)
         return self.tables[category]
+    
+    def getDict(self):
+        return self.tables
