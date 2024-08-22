@@ -11,6 +11,11 @@ state_and_abrv = {'California':'ca', 'New Jersey':"nj", 'Minnesota':"mn", 'Penns
 working_dir =os.path.dirname(os.path.realpath(__file__))
 extracted_path =  working_dir + "/extracted_data"
 
+clean_path = working_dir + "/clean"
+
+if not os.path.exists(clean_path):
+    os.makedirs(clean_path)
+
 # Get geo header and size
 geo_header_path = working_dir + "/geoheader.txt"
 with open(geo_header_path, "r") as file:
@@ -105,8 +110,9 @@ for state in state_and_abrv.keys():
             getRows(lis, rows)
             new_file_path = stat_folder + "/" + abrv + file_name+".csv"
             print(new_file_path)
-            if file_name == "000012010":
-                writeCSV(new_file_path, headers_00001, rows)
-            else:
-                writeCSV(new_file_path, headers_00002, rows)
+            if not os.path.exists(new_file_path):
+                if file_name == "000012010":
+                    writeCSV(new_file_path, headers_00001, rows)
+                else:
+                    writeCSV(new_file_path, headers_00002, rows)
 print("end")
