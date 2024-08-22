@@ -184,28 +184,13 @@ for state_name, state_abbreviation in states:
     df_2.columns = range(df_2.shape[1])
 
     # Define the list of columns to keep
-    columns_to_keep = [76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 103, 124, 140, 147, 149, 150, 151]
+    columns_to_keep = [149, 150, 151]
 
     # Create a new DataFrame with only the selected columns
     df_filtered = df_2[columns_to_keep]
 
     # Create Column Names
     df_filtered.columns = [
-        "18 and Over: Total Population",
-        "18 and Over: Hispanic or Latino",
-        "18 and Over: Not Hispanic or Latino",
-        "18 and Over: Population of One Race",
-        "18 and Over: White",
-        "18 and Over: African-American",
-        "18 and Over: American Indian",
-        "18 and Over: Asian",
-        "18 and Over: Pacific Islander",
-        "18 and Over: Other",
-        "18 and Over: Population of Two Races",
-        "18 and Over: Population of Three Races",
-        "18 and Over: Population of Four Races",
-        "18 and Over: Population of Five Races",
-        "18 and Over: Population of Six Races",
         "Total Housing Units",
         "Occupied Housing Units",
         "Vacant Housing Units"
