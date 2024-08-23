@@ -3,9 +3,18 @@ import pandas as pd
 from tqdm import tqdm
 #Please make sure pandas and tqdm are installed in your enviroment.
 year = "2010"
-state_and_abrv = {"Alaska":"ak","Arizona":"az","Arkansas":"ar","District_of_Columbia":"dc", \
-                  "Florida":"fl","Georgia":"ga","Hawaii":"hi","Idaho":"id","Indiana":"in", \
-                  "Kansas":"ks","Louisiana":"la"}
+state_and_abrv = {"Alabama": "al", "Alaska":"ak", "Arizona":"az", "Arkansas":"ar", "California":"ca", \
+                  "Colorado":"co", "Connecticut":"ct", "District_of_Columbia":"dc", "Delaware":"de", \
+                  "Florida":"fl", "Georgia":"ga", "Hawaii":"hi", "Idaho":"id", "Illinois":"il", \
+                  "Indiana":"in", "Iowa":"ia", "Kansas":"ks", "Kentucky":"ky", "Louisiana":"la", \
+                  "Maine":"me", "Maryland":"md", "Massachusetts":"ma", "Michigan":"mi", "Minnesota":"mn", \
+                  "Mississippi":"ms", "Missouri":"mo", "Montana":"mt", "Nebraska":"ne", "Nevada":"nv", \
+                  "New_Hampshire":"nh", "New_Jersey":"nj", "New_Mexico":"nm", "New_York":"ny", \
+                  "North_Carolina":"nc", "North_Dakota":"nd", "Ohio":"oh", "Oklahoma":"ok", \
+                  "Oregon":"or", "Pennsylvania":"pa", "Puerto_Rico":"pr", "Rhode_Island":"ri", \
+                  "South_Carolina":"sc", "South_Dakota":"sd", "Tennessee":"tn", "Texas":"tx", \
+                  "Utah":"ut", "Vermont":"vt", "Virginia":"va", "Washington":"wa", "West_Virginia":"wv", \
+                  "Wisconsin":"wi", "Wyoming":"wy"}
 
 working_dir =os.path.dirname(os.path.realpath(__file__))
 extracted_path =  working_dir + "/extracted_data"

@@ -107,9 +107,14 @@ def extract_zip(zip_directory, extract_location):
             #         convert_line_endings(file_path)
 
 year = '2010'
-states = ["Alaska", "Arizona", "Arkansas", "District_of_Columbia", \
-              "Florida", "Georgia", "Hawaii", "Idaho", "Indiana", \
-              "Kansas", "Louisiana"]
+states = ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", \
+          "District_of_Columbia", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", \
+          "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", \
+          "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", \
+          "New_Hampshire", "New_Jersey", "New_Mexico", "New_York", "North_Carolina", "North_Dakota", \
+          "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Puerto_Rico", "Rhode_Island", "South_Carolina", \
+          "South_Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", \
+          "West_Virginia", "Wisconsin", "Wyoming"]
 
 # Will dump all the data first
 for state in states:
