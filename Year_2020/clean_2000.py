@@ -119,7 +119,6 @@ def get_geo_data(state, state_abbreviation):
         'State Abv': [stusab],
         'Summary Code': [sumlev],
         'Region': [region],
-        'Division': [division],
     })
 
     return df_split
@@ -164,7 +163,7 @@ for state_name, state_abbreviation in states:
     df['year']=2000
 
     # Assuming there's a specific CSV file you're working with
-    csv_file_path = 'clean/2000_cleaned_data.csv'  # Corrected this line
+    csv_file_path = 'year_2020/clean/2000_cleaned_data.csv'  # Corrected this line
     save_dir = 'census_data'
 
     # Check if the CSV exists and append the DataFrame
