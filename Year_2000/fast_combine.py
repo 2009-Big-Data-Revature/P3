@@ -5,8 +5,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 import csv
 
-DUMP_PATH = 'C:/Users/Hunter/Desktop/Revature/P3/dump/extracted_data'
-OUT_PATH = 'C:/Users/Hunter/Desktop/Revature/P3/out.csv'
+DUMP_PATH = #OUT PATH HERE
+OUT_PATH = #OUT PATH HERE
 SUM_LEVEL = 40
 
 #Joins geo and other table
