@@ -12,7 +12,7 @@ states = [
     ["California", "ca"],
     ["Colorado", "co"],
     ["Connecticut", "ct"],
-    ["District of Columbia", "dc"]
+    ["District of Columbia", "dc"],
     ["Delaware", "de"],
     ["Florida", "fl"],
     ["Georgia", "ga"],
