@@ -1,11 +1,11 @@
 import os
 import pandas as pd
-from pandas.api.types import Literal
+# from pandas.api.types import Literal
 import threading
 import csv
 
-folderName = "2010"
-file_names = ["000012010", "000022010", "geo2010"]
+year = "2010"
+# file_names = ["00001", "00002", "geo"]
 state_and_abrv = {"Alaska":"ak","Arizona":"az","Arkansas":"ar","District_of_Columbia":"dc", \
                   "Florida":"fl","Georgia":"ga","Hawaii":"hi","Idaho":"id","Indiana":"in", \
                   "Kansas":"ks","Louisiana":"la"}
@@ -17,60 +17,62 @@ clean_path = working_dir + "/clean"
 if not os.path.exists(clean_path):
     os.makedirs(clean_path)
 
-geo_header_path = working_dir + "/geoheader.txt"
-with open(geo_header_path, "r") as file:
-    lis = file.read()
-lis = lis.split('\n')
-lis = list(map(lambda line: line.split('\t'), lis))
-geo_headers = [ line[0] for line in lis]
-geo_sizes = [int(line[-1]) for line in lis]
+# geo_header_path = working_dir + "/geoheader.txt"
+# with open(geo_header_path, "r") as file:
+#     lis = file.read()
+# lis = lis.split('\n')
+# lis = list(map(lambda line: line.split('\t'), lis))
+# geo_headers = [ line[0] for line in lis]
+# geo_sizes = [int(line[-1]) for line in lis]
 
-header_00001_path = working_dir + "/00001header.txt"
-with open(header_00001_path, "r") as file:
-    lis = file.read()
-lis = lis.split('\n')
-lis = list(map(lambda line: line.split('\t'), lis))
-headers_00001 = [ line[0] for line in lis]
+# header_00001_path = working_dir + "/00001header.txt"
+# with open(header_00001_path, "r") as file:
+#     lis = file.read()
+# lis = lis.split('\n')
+# lis = list(map(lambda line: line.split('\t'), lis))
+# headers_00001 = [ line[0] for line in lis]
 
-header_00002_path = working_dir + "/00002header.txt"
-with open(header_00002_path, "r") as file:
-    lis = file.read()
-lis = lis.split('\n')
-lis = list(map(lambda line: line.split('\t'), lis))
-headers_00002 = [ line[0] for line in lis]
+# header_00002_path = working_dir + "/00002header.txt"
+# with open(header_00002_path, "r") as file:
+#     lis = file.read()
+# lis = lis.split('\n')
+# lis = list(map(lambda line: line.split('\t'), lis))
+# headers_00002 = [ line[0] for line in lis]
 
-def getRows(lines, rows):
-     for index, line in enumerate(lines):
-        if index % 2 == 0:
-            rows.append(line.split(","))
+# def getRows(lines, rows):
+#      for index, line in enumerate(lines):
+#         if index % 2 == 0:
+#             rows.append(line.split(","))
 
-def open_Folder(file_path):
-    with open(file_path, "r", encoding="utf-8", errors="replace") as file:
-        lis = file.read()
-    return lis
+# def open_Folder(file_path):
+#     with open(file_path, "r", encoding="utf-8", errors="replace") as file:
+#         lis = file.read()
+#     return lis
 
-def getGeoRows(lines, rows):
-    for index, line in enumerate(lines):
-        if index % 2 == 0:
-            number = 0
-            row = list()
-            for num in geo_sizes:
-                row.append(line[number:number+num])
-                number += num
-            rows.append(row)
+# def getGeoRows(lines, rows):
+#     for index, line in enumerate(lines):
+#         if index % 2 == 0:
+#             number = 0
+#             row = list()
+#             for num in geo_sizes:
+#                 row.append(line[number:number+num])
+#                 number += num
+#             rows.append(row)
 
-def writeCSV(new_file_path, header, rows):
-    with open(new_file_path, 'w') as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(header)
-        csvwriter.writerows(rows)
+# def writeCSV(new_file_path, header, rows):
+#     with open(new_file_path, 'w') as csvfile:
+#         csvwriter = csv.writer(csvfile)
+#         csvwriter.writerow(header)
+#         csvwriter.writerows(rows)
 
-def get_df(clean_data_path):
-    df = pd.read_csv(clean_data_path, delimiter=',', header=Literal['infer'], low_memory=False, encoding='ISO-8859-1', on_bad_lines='skip')
+def get_df(state_abbreviation, file_name):
+    file_path = f"{state_abbreviation}{year}/{state_abbreviation}{file_name}{year}.pl"
+    data_file_path = os.path.join(extracted_path, file_path)
+    df = pd.read_csv(data_file_path, delimiter=',', header=None, low_memory=False, encoding='ISO-8859-1', on_bad_lines='skip')
     return df
 
-def get_geo_data(state, state_abbreviation):
-    df = get_df(state, state_abbreviation, 'geo')
+def get_geo_data(state_abbreviation):
+    df = get_df(state_abbreviation, 'geo')
 
     df.columns = range(df.shape[1])
 
@@ -100,12 +102,13 @@ def get_geo_data(state, state_abbreviation):
         'Region': [region],
         'Division': [division],
     })
-
+    #Note it does not join on LogRecNum, might cause issues.
     return df_split
 
 
-def get_population_data(state, state_abbreviation):
-    df = get_df(state, state_abbreviation, '00001')
+def get_population_data(state_abbreviation):
+    
+    df = get_df(state_abbreviation, '00001')
     df = df.head(1)
 
     df.columns = range(df.shape[1])
@@ -131,34 +134,39 @@ def get_population_data(state, state_abbreviation):
 
     return df_filtered
 
-# Open file, create New folder, and add new csv to folder
 def main():
     print("start")
     for state, abrv in state_and_abrv.items():
-    
-        stat_folder =  working_dir + "/clean/" + state
-        if not os.path.exists(stat_folder):
-            os.makedirs(stat_folder)
-        for file_name in file_names:
-            file_path = f"{extracted_path}/{abrv}{folderName}/{abrv}{file_name}.pl"
-            new_file_path = stat_folder + "/" + abrv + file_name+".csv"
-            print(file_path)
-            lis = open_Folder(file_path).split('\n')
-            rows = list()
-            if not os.path.exists(new_file_path):
-                if file_name == 'geo2010':
-                    getGeoRows(lis, rows)
-                else:
-                    getRows(lis, rows)
+        #NOTE: These are pandas dataframes not spark dataframes!
+        geo_df = get_geo_data(abrv)
+        pop_df = get_population_data(abrv)
+        combined_df = pd.concat([geo_df, pop_df], axis=1)
+        df = combined_df
+        df['year']={year}
+        csv_file_path = f'clean/{year}_cleaned_data.csv'
+        # stat_folder =  working_dir + "/clean/" + state
+        # if not os.path.exists(stat_folder):
+        #     os.makedirs(stat_folder)
+        # for file_name in file_names:
+        
+            # new_file_path = stat_folder + "/" + abrv + file_name+".csv"
+            # print(file_path)
+            # lis = open_Folder(file_path).split('\n')
+            # rows = list()
+            # if not os.path.exists(new_file_path):
+            #     if file_name == 'geo2010':
+            #         getGeoRows(lis, rows)
+            #     else:
+            #         getRows(lis, rows)
 
-                print(new_file_path)
-                match (file_name):
-                    case 'geo2010':
-                        writeCSV(new_file_path, geo_headers, rows)
-                    case '000012010':
-                        writeCSV(new_file_path, headers_00001, rows)
-                    case '000022010':
-                        writeCSV(new_file_path, headers_00002, rows)
+            #     print(new_file_path)
+            #     match (file_name):
+            #         case 'geo2010':
+            #             writeCSV(new_file_path, geo_headers, rows)
+            #         case '000012010':
+            #             writeCSV(new_file_path, headers_00001, rows)
+            #         case '000022010':
+            #             writeCSV(new_file_path, headers_00002, rows)
 
         #     geo_df = get_geo_data(state_name, state_abbreviation)
     #     pop_df = get_population_data(state_name, state_abbreviation)
