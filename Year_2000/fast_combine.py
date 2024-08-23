@@ -3,16 +3,17 @@ import os
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
+import csv
 
-#INSERT PATHS
-#DUMP_PATH = '.../extracted_data'
-#OUT_PATH = '.../out.csv'
+DUMP_PATH = 'C:/Users/Hunter/Desktop/Revature/P3/dump/extracted_data'
+OUT_PATH = 'C:/Users/Hunter/Desktop/Revature/P3/out.csv'
+SUM_LEVEL = 40
 
 #Joins geo and other table
 def tableConcat(headers: dict, geo: pd.DataFrame, table: pd.DataFrame) -> pd.DataFrame:
-    geo_headers = headers['geo']['Name'][6:8].to_list()
-    geo.columns = geo_headers
-    trunc_geo = geo.loc[:,['LOGRECNO', 'REGION']]
+    #geo_headers = headers['geo']['Name'].to_list()
+    geo.columns = ['SUMLEVEL', 'LOGRECNO', 'REGION']
+    trunc_geo = geo.loc[geo['SUMLEVEL'] == SUM_LEVEL]
 
     return pd.merge(table, trunc_geo, how = 'inner', on = ['LOGRECNO'])
 
@@ -34,9 +35,9 @@ def process_directory(dir, headers, colspecs):
 
     #Reading from fwf GEO file
     if(files[0] == 'pr00001.upl'):
-        geo = pd.read_fwf(path, colspecs=colspecs, header = None, encoding = 'latin1', memory_map = True, usecols = [6, 7])
+        geo = pd.read_fwf(path, colspecs=colspecs, header = None, encoding = 'latin1', memory_map = True, usecols = [2, 6, 7])
     else:
-        geo = pd.read_fwf(path, colspecs=colspecs, header = None, memory_map = True, usecols = [6, 7])
+        geo = pd.read_fwf(path, colspecs=colspecs, header = None, memory_map = True, usecols = [2, 6, 7])
 
     return tableConcat(headers, geo, table_1)
 
@@ -56,7 +57,8 @@ for i in column_widths:
 full = pd.DataFrame()
 
 f = open(OUT_PATH, 'w+')
-
+writer = csv.writer(f)
+writer.writerow(['STUSAB,P0010001,P0010003,P0010004,P0010005,P0010006,P0010007,P0010008,P0010009,P0020002,P0020003,SUMLEVEL,REGION'])
 with ThreadPoolExecutor() as executor:
     futures = {executor.submit(process_directory, dir, headers, colspecs): dir for dir in os.listdir(DUMP_PATH)}
     for future in as_completed(futures):
