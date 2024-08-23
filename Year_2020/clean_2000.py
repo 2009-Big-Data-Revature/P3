@@ -12,6 +12,7 @@ states = [
     ["California", "ca"],
     ["Colorado", "co"],
     ["Connecticut", "ct"],
+    ["District of Columbia", "dc"]
     ["Delaware", "de"],
     ["Florida", "fl"],
     ["Georgia", "ga"],
@@ -43,6 +44,7 @@ states = [
     ["Oklahoma", "ok"],
     ["Oregon", "or"],
     ["Pennsylvania", "pa"],
+    ["Puerto Rico", "pr"],
     ["Rhode_Island", "ri"],
     ["South_Carolina", "sc"],
     ["South_Dakota", "sd"],
@@ -163,7 +165,8 @@ for state_name, state_abbreviation in states:
     df['year']=2000
 
     # Assuming there's a specific CSV file you're working with
-    csv_file_path = 'year_2020/clean/2000_cleaned_data.csv'  # Corrected this line
+    os.makedirs("clean", exist_ok=True)
+    csv_file_path = 'clean/2000_cleaned_data.csv'  # Corrected this line
     save_dir = 'census_data'
 
     # Check if the CSV exists and append the DataFrame
