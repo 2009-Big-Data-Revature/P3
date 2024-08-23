@@ -167,7 +167,7 @@ for state_name, state_abbreviation in states:
     df["year"] = 2020
     
     # Assuming there's a specific CSV file you're working with
-    csv_file_path = 'clean/2020_cleaned_data.csv'
+    csv_file_path = 'year_2020/clean/2020_cleaned_data.csv'
 
     # Check if the CSV exists and append the DataFrame
     if os.path.exists(csv_file_path):
