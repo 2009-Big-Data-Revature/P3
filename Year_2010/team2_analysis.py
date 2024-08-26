@@ -1,8 +1,9 @@
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import functions as f
 import os
 from env_vars import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 
-#NOTE: env_vars.py is a file that contains the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY variables. It is not uploaded to the repository for security reasons.
+#NOTE: env_vars.py is a python file that contains the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY variables. It is not uploaded to the repository for security reasons.
 
 # Install these JAR files in your Jars folder inside the Spark folder
 # cd $SPARK_HOME/jars
@@ -38,7 +39,7 @@ def get_population_comparison_across_year_and_region():
     df1 = list_of_dfs[0]
     df2 = list_of_dfs[1]
     df3 = list_of_dfs[2]
-    
+
     df1 = spark.createDataFrame(df.where(df["year"] == 2000)\
         .select("State Abv", "Total Population", "year")\
         .orderBy(f.desc(df["Total Population"])).take(5))
@@ -129,7 +130,8 @@ def save_dataframes(*args):
     """
         Takes in a list of dataframes and saves them to a csv file.
     """
-    ...
+    for df in args:
+        df.write.csv("s3a://redistricting-data-2024/Year_2010/Output", header=True)
 
 def main():
     (q1_df_a, q1_df_b) = get_population_comparison_across_year_and_region()
