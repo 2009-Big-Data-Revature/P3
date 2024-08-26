@@ -20,11 +20,13 @@ spark = SparkSession.builder \
 
 bucket_name = 'redistricting-data-2024'
 years = ['2000', '2010', '2020']
+list_of_dfs = []
 for year in years:
     object_name = f'{year}_cleaned_data.csv'
     s3_path = f's3a://{bucket_name}/{object_name}'
     df = spark.read.csv(s3_path, header=True, inferSchema=True)
-    df.createOrReplaceTempView(f'{year}_data')
+    df.createOrReplaceTempView(f'cleaned_data_{year}')
+    list_of_dfs.append(df)
 
 
 def get_population_comparison_across_year_and_region():
@@ -33,6 +35,10 @@ def get_population_comparison_across_year_and_region():
         How does the population of each region change from 2000 to 2020?
         Written by Oluwatobi Kolawole Olukunle
     """
+    df1 = list_of_dfs[0]
+    df2 = list_of_dfs[1]
+    df3 = list_of_dfs[2]
+    
     df1 = spark.createDataFrame(df.where(df["year"] == 2000)\
         .select("State Abv", "Total Population", "year")\
         .orderBy(f.desc(df["Total Population"])).take(5))
@@ -61,6 +67,11 @@ def get_population_comparison_across_year_and_region():
     return (df_top5_state_population_by_year, df_top_region_population)
 
 def get_trend_for_year_2030():
+    """
+        Question 5:
+        Trend Line predictions for states 2030 populations based on 2020 and earlier data.
+        Written by Darryl Bunn
+    """
     ...
 
 def get_fastest_growing_regions():
@@ -115,6 +126,9 @@ def get_fastest_growing_regions():
     return result_df_renamed
 
 def save_dataframes(*args):
+    """
+        Takes in a list of dataframes and saves them to a csv file.
+    """
     ...
 
 def main():
