@@ -36,9 +36,12 @@ def get_population_comparison_across_year_and_region():
         How does the population of each region change from 2000 to 2020?
         Written by Oluwatobi Kolawole Olukunle
     """
-    df1 = list_of_dfs[0]
-    df2 = list_of_dfs[1]
-    df3 = list_of_dfs[2]
+    df: DataFrame
+    for index, dataframe in enumerate(list_of_dfs):
+        if index == 0:
+            df = dataframe
+        else:
+            df = df.union(dataframe)
 
     df1 = spark.createDataFrame(df.where(df["year"] == 2000)\
         .select("State Abv", "Total Population", "year")\
@@ -130,16 +133,16 @@ def save_dataframes(*args):
     """
         Takes in a list of dataframes and saves them to a csv file.
     """
-    for df in args:
-        df.write.csv("s3a://redistricting-data-2024/Year_2010/Output", header=True)
+    # for df in args:
+    #     df.write.csv("s3a://redistricting-data-2024/Year_2010/Output", header=True)
 
 def main():
     (q1_df_a, q1_df_b) = get_population_comparison_across_year_and_region()
-    q2_df = get_trend_for_year_2030()
+    # q2_df = get_trend_for_year_2030()
     q3_df = get_fastest_growing_regions()
 
     #TODO: save dataframes.
-    save_dataframes(q1_df_a, q1_df_b, q2_df, q3_df)
+    # save_dataframes(q1_df_a, q1_df_b, q2_df, q3_df)
 
 if __name__ == '__main__':
     main()
