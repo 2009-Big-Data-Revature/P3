@@ -6,63 +6,66 @@ import os
 import pandas as pd
 
 
-states = [
-    ["Alabama", "al"],
-    ["Alaska", "ak"],
-    ["Arizona", "az"],
-    ["Arkansas", "ar"],
-    ["California", "ca"],
-    ["Colorado", "co"],
-    ["Connecticut", "ct"],
-    ["Delaware", "de"],
-    ["Florida", "fl"],
-    ["Georgia", "ga"],
-    ["Hawaii", "hi"],
-    ["Idaho", "id"],
-    ["Illinois", "il"],
-    ["Indiana", "in"],
-    ["Iowa", "ia"],
-    ["Kansas", "ks"],
-    ["Kentucky", "ky"],
-    ["Louisiana", "la"],
-    ["Maine", "me"],
-    ["Maryland", "md"],
-    ["Massachusetts", "ma"],
-    ["Michigan", "mi"],
-    ["Minnesota", "mn"],
-    ["Mississippi", "ms"],
-    ["Missouri", "mo"],
-    ["Montana", "mt"],
-    ["Nebraska", "ne"],
-    ["Nevada", "nv"],
-    ["New_Hampshire", "nh"],
-    ["New_Jersey", "nj"],
-    ["New_Mexico", "nm"],
-    ["New_York", "ny"],
-    ["North_Carolina", "nc"],
-    ["North_Dakota", "nd"],
-    ["Ohio", "oh"],
-    ["Oklahoma", "ok"],
-    ["Oregon", "or"],
-    ["Pennsylvania", "pa"],
-    ["Rhode_Island", "ri"],
-    ["South_Carolina", "sc"],
-    ["South_Dakota", "sd"],
-    ["Tennessee", "tn"],
-    ["Texas", "tx"],
-    ["Utah", "ut"],
-    ["Vermont", "vt"],
-    ["Virginia", "va"],
-    ["Washington", "wa"],
-    ["West_Virginia", "wv"],
-    ["Wisconsin", "wi"],
-    ["Wyoming", "wy"]
-]
+states = {"Alabama": "al",
+    "Alaska":"ak",
+    "Arizona":"az",
+    "Arkansas":"ar",
+    "California":"ca",
+    "Colorado":"co",
+    "Connecticut":"ct",
+    "District_of_Columbia":"dc",
+    "Delaware":"de",
+    "Florida":"fl",
+    "Georgia":"ga",
+    "Hawaii":"hi",
+    "Idaho":"id",
+    "Illinois":"il",
+    "Indiana":"in",
+    "Iowa":"ia",
+    "Kansas":"ks",
+    "Kentucky":"ky",
+    "Louisiana":"la",
+    "Maine":"me",
+    "Maryland":"md",
+    "Massachusetts":"ma",
+    "Michigan":"mi",
+    "Minnesota":"mn",
+    "Mississippi":"ms",
+    "Missouri":"mo",
+    "Montana":"mt",
+    "Nebraska":"ne",
+    "Nevada":"nv",
+    "New_Hampshire":"nh",
+    "New_Jersey":"nj",
+    "New_Mexico":"nm",
+    "New_York":"ny",
+    "North_Carolina":"nc",
+    "North_Dakota":"nd",
+    "Ohio":"oh",
+    "Oklahoma":"ok",
+    "Oregon":"or",
+    "Pennsylvania":"pa",
+    "Puerto_Rico":"pr",
+    "Rhode_Island":"ri",
+    "South_Carolina":"sc",
+    "South_Dakota":"sd",
+    "Tennessee":"tn",
+    "Texas":"tx",
+    "Utah":"ut",
+    "Vermont":"vt",
+    "Virginia":"va",
+    "Washington":"wa",
+    "West_Virginia":"wv",
+    "Wisconsin":"wi",
+    "Wyoming":"wy"
+}
+
+year = '2010'
 
 # Function to generate the URL for a given state
 def generate_url(state_name, state_abbreviation):
-    url_template = 'https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/{state_name}/{state_abbreviation}2020.pl.zip'
-    return url_template.format(state_name=state_name, state_abbreviation=state_abbreviation)
+    url_template = 'https://www2.census.gov/programs-surveys/decennial/{year}/data/01-Redistricting_File--PL_94-171/{state_name}/{state_abbreviation}{year}.pl.zip'
+    return url_template.format(state_name=state_name, state_abbreviation=state_abbreviation, year=year)
 
 
 
@@ -71,7 +74,7 @@ for state_name, state_abbreviation in states:
     print(f"Downloading data for {state_name} from: {url}")
     # Directory where you want to save the ZIP file and its contents
     save_dir = 'census_data'
-    zip_file_path = os.path.join(save_dir, f'{state_abbreviation}2020.pl.zip')
+    zip_file_path = os.path.join(save_dir, f'{state_abbreviation}{year}.pl.zip')
 
     # Create the directory if it doesn't exist
     os.makedirs(save_dir, exist_ok=True)
@@ -92,7 +95,7 @@ for state_name, state_abbreviation in states:
     print(f"Downloaded and extracted files to: {save_dir}")
 
     # Step 1: Read the pipe-delimited file into a DataFrame
-    data_file_path = os.path.join(save_dir, f'{state_abbreviation}geo2020.pl')
+    data_file_path = os.path.join(save_dir, f'{state_abbreviation}geo{year}.pl')
     df = pd.read_csv(data_file_path, delimiter='|', header=None, low_memory=False, encoding='ISO-8859-1')
 
     # Step 2: Rename the columns to numbers
@@ -141,8 +144,8 @@ for state_name, state_abbreviation in states:
 
     num_rows_to_keep = df.shape[0]
 
-    data_file_path = os.path.join(save_dir, f'{state_abbreviation}000012020.pl')
-    df_1 = pd.read_csv(data_file_path, delimiter='|', header=None, low_memory=False)
+    data_file_path = os.path.join(save_dir, f'{state_abbreviation}00001{year}.pl')
+    df_1 = pd.read_csv(data_file_path, delimiter=',', header=None, low_memory=False)
 
 
     # Step 2: Rename the columns to numbers
@@ -179,8 +182,8 @@ for state_name, state_abbreviation in states:
     df_1 = df_1.head(num_rows_to_keep)
 
     # Step 1: Read the pipe-delimited file into a DataFrame
-    data_file_path = os.path.join(save_dir, f'{state_abbreviation}000022020.pl')
-    df_2 = pd.read_csv(data_file_path, delimiter='|', header=None, low_memory=False)
+    data_file_path = os.path.join(save_dir, f'{state_abbreviation}00002{year}.pl')
+    df_2 = pd.read_csv(data_file_path, delimiter=',', header=None, low_memory=False)
     
     
     df_2 = df_2.head(num_rows_to_keep)
@@ -219,7 +222,7 @@ for state_name, state_abbreviation in states:
 
 
     # Step 1: Read the pipe-delimited file into a DataFrame
-    data_file_path = os.path.join(save_dir, f'{state_abbreviation}000032020.pl')
+    data_file_path = os.path.join(save_dir, f'{state_abbreviation}00003{year}.pl')
     df_3 = pd.read_csv(data_file_path, delimiter='|', header=None, low_memory=False)
     
     df_3 = df_3.head(num_rows_to_keep)
@@ -259,7 +262,7 @@ for state_name, state_abbreviation in states:
     df = combined_df
 
     # Assuming there's a specific CSV file you're working with
-    csv_file_path = 'clean/2020_cleaned_data.csv'  # Corrected this line
+    csv_file_path = 'clean/{year}_cleaned_data.csv'  # Corrected this line
 
     # Check if the CSV exists and append the DataFrame
     if os.path.exists(csv_file_path):
