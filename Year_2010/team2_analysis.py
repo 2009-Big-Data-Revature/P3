@@ -1,5 +1,6 @@
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as f
+from pyspark.sql.functions import floor as _floor
 import os
 from env_vars import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 
@@ -76,7 +77,27 @@ def get_trend_for_year_2030():
         Trend Line predictions for states 2030 populations based on 2020 and earlier data.
         Written by Darryl Bunn
     """
-    ...
+    df_2000 = list_of_dfs[0]
+    df_2010 = list_of_dfs[1]
+    df_2020 = list_of_dfs[2]
+
+    pop_state_df = df_2000.filter(df_2000["Summary Code"] == 40).join(df_2010, df_2000["State Abv"] == df_2010["State Abv"])\
+    .join(df_2020, df_2000["State Abv"] == df_2020["State Abv"])\
+    .select(
+        df_2000["State Abv"], 
+        df_2000["Total Population"].alias("2000 Population"), 
+        df_2010["Total Population"].alias("2010 Population"),
+        df_2020["Total Population"].alias("2020 Population")
+    )
+
+    # Population prediction for 2030 by state
+    # Estimated using exponential growth model
+    df_2030_projected = pop_state_df.withColumn(
+        "2030 Projected Population", 
+        _floor(((pop_state_df["2020 Population"]**2)/pop_state_df["2010 Population"]+(pop_state_df["2020 Population"]**1.5)/pop_state_df["2000 Population"]**0.5)/2)
+        ).select("State Abv", "2030 Projected Population")
+    return df_2030_projected
+
 
 def get_fastest_growing_regions():
     """
