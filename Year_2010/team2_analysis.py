@@ -3,6 +3,7 @@ from pyspark.sql import functions as f
 from pyspark.sql.functions import floor as _floor
 import os
 from env_vars import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+from tqdm import tqdm
 
 #NOTE: env_vars.py is a python file that contains the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY variables. It is not uploaded to the repository for security reasons.
 
@@ -10,6 +11,11 @@ from env_vars import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 # cd $SPARK_HOME/jars
 # wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.2.0/hadoop-aws-3.2.0.jar
 # wget https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.375/aws-java-sdk-bundle-1.11.375.jar
+
+working_dir =os.path.dirname(os.path.realpath(__file__))
+results_path = working_dir + "/results"
+if not os.path.exists(results_path):
+    os.makedirs(results_path)
 
 spark = SparkSession.builder \
     .appName("S3 to Spark DataFrame") \
@@ -154,16 +160,23 @@ def save_dataframes(*args):
     """
         Takes in a list of dataframes and saves them to a csv file.
     """
-    # for df in args:
-    #     df.write.csv("s3a://redistricting-data-2024/Year_2010/Output", header=True)
+
+    for index, df in tqdm(enumerate(args)):
+        switcher = {
+            0: "q4_df_a",
+            1: "q4_df_b",
+            2: "q5_df",
+            3: "q6_df"
+        }
+        df_savepath = os.path.join(results_path,switcher.get(index) + ".csv")
+        df.toPandas().to_csv(df_savepath, index=False)
 
 def main():
     (q1_df_a, q1_df_b) = get_population_comparison_across_year_and_region()
-    # q2_df = get_trend_for_year_2030()
+    q2_df = get_trend_for_year_2030()
     q3_df = get_fastest_growing_regions()
 
-    #TODO: save dataframes.
-    # save_dataframes(q1_df_a, q1_df_b, q2_df, q3_df)
+    save_dataframes(q1_df_a, q1_df_b, q2_df, q3_df)
 
 if __name__ == '__main__':
     main()
