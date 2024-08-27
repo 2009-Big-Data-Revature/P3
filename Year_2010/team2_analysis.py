@@ -71,7 +71,7 @@ def get_population_comparison_across_year_and_region():
     df_top_region_population= df.groupBy("Region", "Year")\
         .agg(f.sum("Total Population")\
         .alias("Total_Population"))\
-        .orderBy("year", "Total Population")
+        .orderBy("year", "Total_Population")
 
     df_top5_state_population_by_year.show()
     df_top_region_population.show()
