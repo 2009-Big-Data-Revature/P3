@@ -2,6 +2,7 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as f
 from pyspark.sql.functions import floor as _floor
 import os
+import boto3
 from env_vars import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 from tqdm import tqdm
 
@@ -14,12 +15,19 @@ from tqdm import tqdm
 
 #Install the following packages:
 # pip install tqdm
-# pip install fsspec[full]
+# pip install boto3
 
 working_dir =os.path.dirname(os.path.realpath(__file__))
 results_path = working_dir + "/results"
 if not os.path.exists(results_path):
     os.makedirs(results_path)
+
+s3 = boto3.client(
+    's3',
+    region_name='us-east-2',
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+    )
 
 spark = SparkSession.builder \
     .appName("S3 to Spark DataFrame") \
@@ -179,12 +187,18 @@ def save_dataframes(*args):
         df_savepath = os.path.join(results_path,switcher.get(index) + ".csv")
         df.toPandas().to_csv(df_savepath, index=False)
 
+def upload_to_s3():
+    for filename in os.listdir(results_path):
+        if filename.endswith(".csv"):
+            s3.upload_file(os.path.join(results_path, filename), bucket_name, filename)
+
 def main():
     (q1_df_a, q1_df_b) = get_population_comparison_across_year_and_region()
     q2_df = get_trend_for_year_2030()
     q3_df = get_fastest_growing_regions()
 
     save_dataframes(q1_df_a, q1_df_b, q2_df, q3_df)
+    upload_to_s3()
 
 if __name__ == '__main__':
     main()
