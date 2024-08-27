@@ -48,8 +48,7 @@ def get_geo_data(state_abbreviation):
     df_split = pd.DataFrame({
         'State Abv': [stusab],
         'Summary Code': [sumlev],
-        'Region': [region],
-        'Division': [division],
+        'Region': [region]
     })
     #Note it does not join on LogRecNum, might cause issues. sumlev is 40 by default here.
     return df_split
