@@ -1,9 +1,8 @@
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as f
 from pyspark.sql.functions import floor as _floor
-from pyspark.sql.functions import log
-from pyspark.sql.functions import lit
 import os
+import boto3
 from env_vars import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 from tqdm import tqdm
 
@@ -14,10 +13,21 @@ from tqdm import tqdm
 # wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.2.0/hadoop-aws-3.2.0.jar
 # wget https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.375/aws-java-sdk-bundle-1.11.375.jar
 
+#Install the following packages:
+# pip install tqdm
+# pip install boto3
+
 working_dir =os.path.dirname(os.path.realpath(__file__))
 results_path = working_dir + "/results"
 if not os.path.exists(results_path):
     os.makedirs(results_path)
+
+s3 = boto3.client(
+    's3',
+    region_name='us-east-2',
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+    )
 
 spark = SparkSession.builder \
     .appName("S3 to Spark DataFrame") \
@@ -37,7 +47,6 @@ for year in years:
     df = spark.read.csv(s3_path, header=True, inferSchema=True)
     df.createOrReplaceTempView(f'cleaned_data_{year}')
     list_of_dfs.append(df)
-
 
 def get_population_comparison_across_year_and_region():
     """
@@ -172,16 +181,20 @@ def save_dataframes(*args):
     """
         Takes in a list of dataframes and saves them to a csv file.
     """
-
-    for index, df in tqdm(enumerate(args)):
-        switcher = {
-            0: "q4_df_a",
-            1: "q4_df_b",
-            2: "q5_df",
-            3: "q6_df"
+    switcher = {
+            0: "population_comparison_state_ranking",
+            1: "population_comparison_region_ranking",
+            2: "trend_line_prediction_2030",
+            3: "fastest_growing_regions"
         }
+    for index, df in tqdm(enumerate(args)):
         df_savepath = os.path.join(results_path,switcher.get(index) + ".csv")
         df.toPandas().to_csv(df_savepath, index=False)
+
+def upload_to_s3():
+    for filename in os.listdir(results_path):
+        if filename.endswith(".csv"):
+            s3.upload_file(os.path.join(results_path, filename), bucket_name, filename)
 
 def main():
     (q1_df_a, q1_df_b) = get_population_comparison_across_year_and_region()
@@ -189,6 +202,7 @@ def main():
     q3_df = get_fastest_growing_regions()
 
     save_dataframes(q1_df_a, q1_df_b, q2_df, q3_df)
+    # upload_to_s3()
 
 if __name__ == '__main__':
     main()
