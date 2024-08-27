@@ -19,11 +19,11 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 bucket_name = 'redistricting-data-2024'
-object_name = '2000_cleaned_data.csv'
+object_name = '2010_cleaned_data.csv'
 s3_path = f's3a://{bucket_name}/{object_name}'
 
 df = spark.read.csv(s3_path, header=True, inferSchema=True)
-df.show()
+df.select(['State Abv', 'Not Hispanic or Latino']).show()
 
 
 
