@@ -65,13 +65,13 @@ def get_population_comparison_across_year_and_region():
         .union(df.join(df3, df["State Abv"] == df3["State Abv"]))\
         .groupBy(df["State Abv"], df["Total Population"], df["year"])\
         .count()\
-        .select("State Abv", "Total Population", "year").orderBy("year")
+        .select("State Abv", "Total Population", "year").orderBy("year", "Total Population")
         
 
     df_top_region_population= df.groupBy("Region", "Year")\
         .agg(f.sum("Total Population")\
         .alias("Total_Population"))\
-        .orderBy("year", "Region")
+        .orderBy("year", "Total Population")
 
     df_top5_state_population_by_year.show()
     df_top_region_population.show()
