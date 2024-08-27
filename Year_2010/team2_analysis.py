@@ -107,13 +107,13 @@ def get_trend_for_year_2030():
         df_2010["Total Population"].alias("2010 Population"),
         df_2020["Total Population"].alias("2020 Population")
     )
-
     # Population prediction for 2030 by state
     # Estimated using exponential growth model
     df_2030_projected = pop_state_df.withColumn(
         "2030 Projected Population", 
         _floor(((pop_state_df["2020 Population"]**2)/pop_state_df["2010 Population"]+(pop_state_df["2020 Population"]**1.5)/pop_state_df["2000 Population"]**0.5)/2)
-        ).select("State Abv", "2030 Projected Population")
+        )
+    df_2030_projected.show()
     return df_2030_projected
 
 
@@ -178,12 +178,7 @@ def save_dataframes(*args):
             2: "trend_line_prediction_2030",
             3: "fastest_growing_regions"
         }
-    # s3_path = f's3a://{bucket_name}'
     for index, df in tqdm(enumerate(args)):
-        # object_name = switcher.get(index) + ".csv"
-        # df_savepath = os.path.join(s3_path,object_name)
-        # print(df_savepath)
-        # df.toPandas().to_csv(df_savepath, index=False)
         df_savepath = os.path.join(results_path,switcher.get(index) + ".csv")
         df.toPandas().to_csv(df_savepath, index=False)
 
