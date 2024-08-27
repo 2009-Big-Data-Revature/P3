@@ -1,6 +1,5 @@
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql import functions as f
-from pyspark.sql.functions import floor as _floor
 import os
 import boto3
 from env_vars import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
@@ -107,14 +106,24 @@ def get_trend_for_year_2030():
         df_2010["Total Population"].alias("2010 Population"),
         df_2020["Total Population"].alias("2020 Population")
     )
+
     # Population prediction for 2030 by state
     # Estimated using exponential growth model
     df_2030_projected = pop_state_df.withColumn(
         "2030 Projected Population", 
-        _floor(((pop_state_df["2020 Population"]**2)/pop_state_df["2010 Population"]+(pop_state_df["2020 Population"]**1.5)/pop_state_df["2000 Population"]**0.5)/2)
-        )
-    df_2030_projected.show()
-    return df_2030_projected
+        f.floor(((pop_state_df["2020 Population"]**2)/pop_state_df["2010 Population"]+(pop_state_df["2020 Population"]**1.5)/pop_state_df["2000 Population"]**0.5)/2)
+        )\
+        .withColumn(
+            "Growth Rate",
+            f.log((pop_state_df["2020 Population"])/pop_state_df["2010 Population"]) + 0.5*f.log((pop_state_df["2020 Population"])/pop_state_df["2000 Population"])
+        )\
+            .select("State Abv", "2000 Population", "2010 Population", "2020 Population", "2030 Projected Population", "Growth Rate")
+    new_df = df_2030_projected.select("State Abv", df_2030_projected["2000 Population"].alias("population"), "Growth Rate").withColumn("year", f.lit(2000))\
+    .union(df_2030_projected.select("State Abv", df_2030_projected["2010 Population"].alias("population"), "Growth Rate").withColumn("year", f.lit(2010)))\
+    .union(df_2030_projected.select("State Abv", df_2030_projected["2020 Population"].alias("population"), "Growth Rate").withColumn("year", f.lit(2020)))\
+    .union(df_2030_projected.select("State Abv", df_2030_projected["2030 Projected Population"].alias("population"), "Growth Rate").withColumn("year", f.lit(2030)))
+    new_df.show(truncate=False)
+    return new_df
 
 
 def get_fastest_growing_regions():
