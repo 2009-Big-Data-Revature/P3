@@ -6,7 +6,7 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 #Read 2000, 2010, and 2020 csv's
-dfs = [spark.read.csv(f'/data_{year}.csv', header=True, inferSchema=True) for year in ['2000', '2010', '2020']]
+dfs = [spark.read.csv(f'/home/michael/proj3/data_{year}.csv', header=True, inferSchema=True) for year in ['2000', '2010', '2020']]
 
 
 #Union all three df's into one big one
@@ -19,25 +19,32 @@ out_dfs = {}
 
 
 #Display Total Population by Year. columns: (year, sum(Total_Population))
-out_dfs['Total_Pop'] = (
+total_pop = (
     union_df.groupBy("year") \
     .sum('Total Population') \
     .alias("Total Population") \
     .orderBy("year")
 )
 
+for col_name in total_pop.columns:
+    if col_name.startswith("sum("):
+        new_name = col_name.replace("sum(", "").replace(")", "")
+        total_pop = total_pop.withColumnRenamed(col_name, new_name)
+
+out_dfs['Total_Pop'] = total_pop
+
 
 #Display Total Population of all states by Year. columns: (AK, AL, AR, ..., WY)
 out_dfs['State_Pops'] = (
     union_df.groupBy("year") \
-    .pivot("State Abv", ["AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MP", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UM", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY"]) \
+    .pivot("State Abv", ["AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"]) \
     .sum("Total Population") \
     .orderBy("year") \
 )
 
 
 #Display Population of each category by year. columns: (White Alone, African-American Alone, American Indian and Alaska Native Alone, Asian Alone, Native Hawaiian/Pacific Islander Alone, Other Alone, Two or More Races, Hispanic or Latino, Not Hispanic or Latino)
-out_dfs['Category_Pops'] = (
+category_pop = (
     union_df.groupby("year") \
     .sum("White Alone", "African-American Alone", "American Indian and Alaska Native Alone", 
         "Asian Alone", "Native Hawaiian/Pacific Islander Alone", "Other Alone", 
@@ -45,6 +52,12 @@ out_dfs['Category_Pops'] = (
     .orderBy("year")
 )
 
+for col_name in category_pop.columns:
+    if col_name.startswith("sum("):
+        new_name = col_name.replace("sum(", "").replace(")", "")
+        category_pop = category_pop.withColumnRenamed(col_name, new_name)
+
+out_dfs['Category_Pops'] = category_pop
 
 #Display state with highest population by year. columns: (year, State_Abv, Total_Population)
 w = Window.partitionBy('year')
@@ -67,7 +80,8 @@ out_dfs['Region_Per_Year'] = (
 
 #Write all constructed dfs to csv
 for name in out_dfs:
-    out_dfs[name].write.format('csv').option('header', 'true').mode('overwrite').save(f'/home/michael/proj3/{name}.csv')
+    out_dfs[name].show()
+    out_dfs[name].write.format('csv').option('header', 'true').mode('overwrite').save(f'/proj3/{name}.csv')
 
 
 
