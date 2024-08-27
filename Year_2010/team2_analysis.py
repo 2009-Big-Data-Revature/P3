@@ -16,10 +16,10 @@ from tqdm import tqdm
 # pip install tqdm
 # pip install fsspec[full]
 
-# working_dir =os.path.dirname(os.path.realpath(__file__))
-# results_path = working_dir + "/results"
-# if not os.path.exists(results_path):
-#     os.makedirs(results_path)
+working_dir =os.path.dirname(os.path.realpath(__file__))
+results_path = working_dir + "/results"
+if not os.path.exists(results_path):
+    os.makedirs(results_path)
 
 spark = SparkSession.builder \
     .appName("S3 to Spark DataFrame") \
@@ -170,11 +170,13 @@ def save_dataframes(*args):
             2: "trend_line_prediction_2030",
             3: "fastest_growing_regions"
         }
-    s3_path = f's3a://{bucket_name}'
+    # s3_path = f's3a://{bucket_name}'
     for index, df in tqdm(enumerate(args)):
-        object_name = switcher.get(index) + ".csv"
-        df_savepath = os.path.join(s3_path,object_name)
-        print(df_savepath)
+        # object_name = switcher.get(index) + ".csv"
+        # df_savepath = os.path.join(s3_path,object_name)
+        # print(df_savepath)
+        # df.toPandas().to_csv(df_savepath, index=False)
+        df_savepath = os.path.join(results_path,switcher.get(index) + ".csv")
         df.toPandas().to_csv(df_savepath, index=False)
 
 def main():
