@@ -12,10 +12,14 @@ from tqdm import tqdm
 # wget https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.2.0/hadoop-aws-3.2.0.jar
 # wget https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.375/aws-java-sdk-bundle-1.11.375.jar
 
-working_dir =os.path.dirname(os.path.realpath(__file__))
-results_path = working_dir + "/results"
-if not os.path.exists(results_path):
-    os.makedirs(results_path)
+#Install the following packages:
+# pip install tqdm
+# pip install fsspec[full]
+
+# working_dir =os.path.dirname(os.path.realpath(__file__))
+# results_path = working_dir + "/results"
+# if not os.path.exists(results_path):
+#     os.makedirs(results_path)
 
 spark = SparkSession.builder \
     .appName("S3 to Spark DataFrame") \
@@ -160,15 +164,17 @@ def save_dataframes(*args):
     """
         Takes in a list of dataframes and saves them to a csv file.
     """
-
-    for index, df in tqdm(enumerate(args)):
-        switcher = {
-            0: "q4_df_a",
-            1: "q4_df_b",
-            2: "q5_df",
-            3: "q6_df"
+    switcher = {
+            0: "population_comparison_state_ranking",
+            1: "population_comparison_region_ranking",
+            2: "trend_line_prediction_2030",
+            3: "fastest_growing_regions"
         }
-        df_savepath = os.path.join(results_path,switcher.get(index) + ".csv")
+    s3_path = f's3a://{bucket_name}'
+    for index, df in tqdm(enumerate(args)):
+        object_name = switcher.get(index) + ".csv"
+        df_savepath = os.path.join(s3_path,object_name)
+        print(df_savepath)
         df.toPandas().to_csv(df_savepath, index=False)
 
 def main():
