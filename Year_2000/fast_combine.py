@@ -2,70 +2,172 @@ from scraper import HeaderScraper
 import os
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
+import tabula
 import time
-import csv
 
-DUMP_PATH = #OUT PATH HERE
-OUT_PATH = #OUT PATH HERE
-SUM_LEVEL = 40
+DUMP_PATHS = ['C:/Users/Hunter/Desktop/Revature/P3/dump/extracted_data', 'C:/Users/Hunter/Desktop/Revature/P3/git2/dump/extracted_data']
+OUT_PATHS = ['C:/Users/Hunter/Desktop/Revature/P3/git2/Year_2000/clean/2000_cleaned_data.csv', 'C:/Users/Hunter/Desktop/Revature/P3/git2/Year_2000/clean/2010_cleaned_data.csv']
+SUM_LEVEL = '040'
+COLUMNS = ['STUSAB','P0010001','P0010003','P0010004','P0010005','P0010006','P0010007','P0010008','P0010009','P0020002','P0020003','SUMLEV','REGION']
 
-#Joins geo and other table
-def tableConcat(headers: dict, geo: pd.DataFrame, table: pd.DataFrame) -> pd.DataFrame:
-    #geo_headers = headers['geo']['Name'].to_list()
-    geo.columns = ['SUMLEVEL', 'LOGRECNO', 'REGION']
-    trunc_geo = geo.loc[geo['SUMLEVEL'] == SUM_LEVEL]
+def get_indices(headers, key):
+    return [(i, name) for i, name in enumerate(headers) if name in ['SUMLEV', 'LOGRECNO'] + [col for col in COLUMNS if col not in ['SUMLEV', 'LOGRECNO']]]
 
-    return pd.merge(table, trunc_geo, how = 'inner', on = ['LOGRECNO'])
+def get_columns(headers):
+    column_list = [column for column in headers['geo']['Name'] if column in COLUMNS] 
+    column_list += [column for column in headers['p1']['Name'] if column in COLUMNS and column not in column_list] 
+    column_list += [column for column in headers['p2']['Name'] if column in COLUMNS and column not in column_list]
+    return column_list
 
+def read_geo(geo_file, indices, colspecs):
+    lines = geo_file.readlines()
+    sumlev_index = next(i for i, name in indices if name == 'SUMLEV')
+    sumlev_slice = colspecs[sumlev_index]
 
-def process_directory(dir, headers, colspecs):
-    base = os.path.join(DUMP_PATH, dir)
-    files = [os.fsdecode(file) for file in os.listdir(base)]
+    geo_list = [{name: line[colspecs[i][0]:colspecs[i][1]].strip() for i, name in indices} for line in lines if line[sumlev_slice[0]:sumlev_slice[1]].strip() == SUM_LEVEL]
 
-    #Reading part 1 into dataframe
-    path = os.path.join(base, files[0])
-    table_1 = pd.read_csv(path, names = ['STUSAB', 'LOGRECNO', 'P0010001', 
-                                          'P0010003', 'P0010004', 'P0010005', 
-                                          'P0010006', 'P0010007', 'P0010008', 
-                                          'P0010009', 'P0020002', 'P0020003'], 
-                          usecols = [1, 4, 6, 7, 8, 9, 10, 11, 12, 13, 77, 78]) #Double check these column numbers
+    return geo_list
+
+def read_table(table_file, indices, log_nos):
+    table_list = []
+    lines = table_file.readlines()
+    for line in lines:
+        fields = line.split(',')
+        if fields[4] in log_nos:
+            row = {name: fields[i] for i, name in indices}
+            table_list.append(row)
+            log_nos.remove(fields[4])
+        if not log_nos:
+            break
+    return table_list
+
+def process_directory(dir, colspecs: list, geo_indices: list, table_indices: list, year: str) -> pd.DataFrame:
+    files = [os.fsdecode(file) for file in os.listdir(dir)]
+    paths = [os.path.join(dir, path) for path in files]
+    paths.sort()
+    i = (year == '2010')
     
-    #Creating geo dataframe - this one is more complicated because it's a fwf instead of a csv
-    path = os.path.join(base, files[2])
+    with open(paths[2 + i]) as geo_file:
+        geo_list = read_geo(geo_file, geo_indices, colspecs)
+    geo = pd.DataFrame(geo_list)
+    
 
-    #Reading from fwf GEO file
-    if(files[0] == 'pr00001.upl'):
-        geo = pd.read_fwf(path, colspecs=colspecs, header = None, encoding = 'latin1', memory_map = True, usecols = [2, 6, 7])
+    with open(paths[0]) as table_1_file: 
+        table_1_list= read_table(table_1_file, table_indices[0], set(geo['LOGRECNO'].to_list()))
+    table_1 = pd.DataFrame(table_1_list)
+
+
+    cols_to_use = table_1.columns.difference(geo.columns).to_list()
+    cols_to_use.append('LOGRECNO')
+    merge = pd.merge(geo, table_1[cols_to_use], how = 'inner', on = ['LOGRECNO'])
+
+    if ('LOGRECNO' not in COLUMNS): merge = merge.drop(columns = ['LOGRECNO'])
+
+    return merge
+
+#Gets headers from technical docs pdfs
+def get_headers(year):
+    if (year == '2000'):
+        #Scraping headers
+        scraper = HeaderScraper()
+        scraper.scrape()
+        headers = scraper.getDict()
+
+        #We have to read the geo metadata from the technical docs pdf since the one in scraper is broken (incorrect data on website)
+        df = tabula.read_pdf("https://www2.census.gov/programs-surveys/decennial/2000/technical-documentation/complete-tech-docs/summary-files/public-law-summary-files/pl-00-1.pdf",pages="15-19") #address of pdf file
+        geo_columns = [x for entries in df[:2] for x in entries.iloc[:, 1].to_list() if x == x and x != 'dictionary' and x != 'reference' and x != 'name']
+        column_widths = [int(x) for entries in df[:2] for x in entries.iloc[:, 2].to_list() if x == x and x.isdigit()]
+        return ([headers['p1']['Name'].to_list(), headers['p2']['Name'].to_list()], geo_columns, column_widths)
     else:
-        geo = pd.read_fwf(path, colspecs=colspecs, header = None, memory_map = True, usecols = [2, 6, 7])
+        #We have to read the geo metadata from the technical docs pdf since the one in scraper is broken (incorrect data on website)
+        df = tabula.read_pdf("https://www2.census.gov/programs-surveys/decennial/2010/technical-documentation/complete-tech-docs/summary-file/nsfrd.pdf",pages="15") #address of pdf file
+        geo_columns = [x for x in df[0]['Unnamed: 0'].to_list() if x == x]
+        column_widths = [int(x) for x in df[0]['Unnamed: 1'].to_list() if x == x]
 
-    return tableConcat(headers, geo, table_1)
 
-#Scraping headers
-scraper = HeaderScraper()
-scraper.scrape()
-headers = scraper.getDict()
+        df = tabula.read_pdf("https://www2.census.gov/programs-surveys/decennial/2010/technical-documentation/complete-tech-docs/summary-file/nsfrd.pdf",pages="16") #address of pdf file
+        all_columns = df[0]['Data\rdictionary\rreference'].to_list()[1].split('\r')
+        geo_columns_2 = [x for x in all_columns if x == x and x != '']
+        all_widths = df[0]['Field\rsize'].to_list()[1].split('\r')
+        column_widths_2 = [int(x) for x in all_widths if x == x and x != '']
 
-#Constructing colspecs for fwf file later
-column_widths = headers['geo']['Size'].to_list()
-colspecs = []
-pos = 0
-for i in column_widths:
-    colspecs.append((pos, pos+int(i)))
-    pos += int(i)
+        geo_columns += geo_columns_2
+        column_widths += column_widths_2
 
-full = pd.DataFrame()
+        df = tabula.read_pdf("https://www2.census.gov/census_2010/redistricting_file--pl_94-171/0FILE_STRUCTURE.pdf",pages="5-8", pandas_options={'header': None}) #address of pdf file
+        concat_list = [d.iloc[:, 0] for d in df[1:5]]
+        p1_headers = [x for x in pd.concat(concat_list).to_list() if x != 'Name']
 
-f = open(OUT_PATH, 'w+')
-writer = csv.writer(f)
-writer.writerow(['STUSAB,P0010001,P0010003,P0010004,P0010005,P0010006,P0010007,P0010008,P0010009,P0020002,P0020003,SUMLEVEL,REGION'])
-with ThreadPoolExecutor() as executor:
-    futures = {executor.submit(process_directory, dir, headers, colspecs): dir for dir in os.listdir(DUMP_PATH)}
-    for future in as_completed(futures):
-        dir = futures[future]
-        try:
-            combined = future.result()
-            combined.drop(columns = ['LOGRECNO']).to_csv(OUT_PATH, mode = 'a', index = False, header = False) #Appends to out.csv
-            print(f"{dir} finished: {combined.shape[0]} rows appended.")
-        except Exception as e:
-            print(f"Error processing directory {dir}: {e}")
+        df = tabula.read_pdf("https://www2.census.gov/census_2010/redistricting_file--pl_94-171/0FILE_STRUCTURE.pdf",pages="8-12") #address of pdf file
+        concat_list = [d.iloc[:, 0] for d in df[1:]]
+        p2_headers = pd.concat(concat_list).to_list()
+        return ([p1_headers, p2_headers], geo_columns, column_widths)
+
+
+for i, year in enumerate(['2000', '2010']):
+    print(f'Processing year {year}')
+    print(COLUMNS)
+    headers, geo_columns, column_widths = get_headers(year)
+
+    #column widths for the fixed-width-file
+    colspecs = []
+    pos = 0
+    for j in column_widths:
+        colspecs.append((pos, pos+int(j)))
+        pos += int(j)
+
+    #Retrieving indices of the columns we want
+    geo_indices = get_indices(geo_columns, 'geo')
+    table_1_indices = get_indices(headers[0], 'p1')
+    table_2_indices = get_indices(headers[1], 'p2')
+
+    table_indices = [table_1_indices]
+    if table_2_indices: table_indices += table_2_indices
+
+    with open(OUT_PATHS[i], 'w+', newline = '') as out_file:
+        pass
+
+    start = time.time()
+    header = 1
+    write_lock = Lock()
+    full = pd.DataFrame()
+    with ThreadPoolExecutor() as executor:
+        futures = {executor.submit(process_directory, os.path.join(DUMP_PATHS[i], dir), colspecs, geo_indices, table_indices, year): dir for dir in os.listdir(DUMP_PATHS[i])}
+        for future in as_completed(futures):
+            dir = futures[future]
+            try:
+                combined = future.result()
+                with write_lock:
+                    full = pd.concat([full, combined])
+                    #combined.to_csv(OUT_PATH[i], mode = 'a', index = False, header = header) #Appends to out.csv
+                    if header: 
+                        full.columns = combined.columns
+                        header = 0
+                print(f"{dir} finished: {combined.shape[0]} rows appended.")
+            except Exception as e:
+                print(f"Error processing directory {dir}: {e}")
+    end = time.time()
+    print(end-start)
+
+    column_dict = {
+        'P0010001' : 'Total Population',
+        'P0010003' : 'White Alone',
+        'P0010004' : 'African-American Alone',
+        'P0010005' : 'American Indian and Alaska Native Alone',
+        'P0010006' : 'Asian Alone',
+        'P0010007' : 'Native Hawaiian/Pacific Islander Alone',
+        'P0010008' : 'Other Alone',
+        'P0010009' : 'Two or More Races',
+        'P0020002' : 'Hispanic or Latino',
+        'P0020003' : 'Not Hispanic or Latino',
+        'SUMLEV' : 'Summary Code',
+        'REGION' : 'Region',
+        'STUSAB' : 'State Abv'
+    }
+
+
+    full = full.rename(column_dict, axis = 1)
+    print(full)
+    full.to_csv(OUT_PATHS[i], index = False)
+    print(f'{year}_cleaned_data.csv written to {OUT_PATHS[i]}')
