@@ -11,15 +11,18 @@ OUT_PATHS = ['C:/Users/Hunter/Desktop/Revature/P3/git2/Year_2000/clean/2000_clea
 SUM_LEVEL = '040'
 COLUMNS = ['STUSAB','P0010001','P0010003','P0010004','P0010005','P0010006','P0010007','P0010008','P0010009','P0020002','P0020003','SUMLEV','REGION']
 
+#gets the indices and names for the columns specified in COLUMNS
 def get_indices(headers, key):
     return [(i, name) for i, name in enumerate(headers) if name in ['SUMLEV', 'LOGRECNO'] + [col for col in COLUMNS if col not in ['SUMLEV', 'LOGRECNO']]]
 
+#Gets list of column names
 def get_columns(headers):
     column_list = [column for column in headers['geo']['Name'] if column in COLUMNS] 
     column_list += [column for column in headers['p1']['Name'] if column in COLUMNS and column not in column_list] 
     column_list += [column for column in headers['p2']['Name'] if column in COLUMNS and column not in column_list]
     return column_list
 
+#reads the geo file
 def read_geo(geo_file, indices, colspecs):
     lines = geo_file.readlines()
     sumlev_index = next(i for i, name in indices if name == 'SUMLEV')
@@ -29,6 +32,7 @@ def read_geo(geo_file, indices, colspecs):
 
     return geo_list
 
+#reads the table file
 def read_table(table_file, indices, log_nos):
     table_list = []
     lines = table_file.readlines()
@@ -42,12 +46,13 @@ def read_table(table_file, indices, log_nos):
             break
     return table_list
 
+#calls read_geo and read_table, manipulates the columns, and merges them
 def process_directory(dir, colspecs: list, geo_indices: list, table_indices: list, year: str) -> pd.DataFrame:
     files = [os.fsdecode(file) for file in os.listdir(dir)]
     paths = [os.path.join(dir, path) for path in files]
     paths.sort()
     i = (year == '2010')
-    
+
     with open(paths[2 + i]) as geo_file:
         geo_list = read_geo(geo_file, geo_indices, colspecs)
     geo = pd.DataFrame(geo_list)
@@ -168,6 +173,8 @@ for i, year in enumerate(['2000', '2010']):
 
 
     full = full.rename(column_dict, axis = 1)
+    full.sort_values('State Abv', inplace=True)
+    full['year'] = year
     print(full)
     full.to_csv(OUT_PATHS[i], index = False)
     print(f'{year}_cleaned_data.csv written to {OUT_PATHS[i]}')
