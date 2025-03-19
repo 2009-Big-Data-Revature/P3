@@ -2,6 +2,8 @@ import os
 import pandas as pd
 import requests
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
+import time
 
 
 states = [
@@ -153,7 +155,7 @@ def get_population_data(state, state_abbreviation):
 
     return df_filtered
 
-for state_name, state_abbreviation in states:
+def process_state(state_name, state_abbreviation):
     geo_df = get_geo_data(state_name, state_abbreviation)
     pop_df = get_population_data(state_name, state_abbreviation)
 
@@ -167,7 +169,6 @@ for state_name, state_abbreviation in states:
     # Assuming there's a specific CSV file you're working with
     os.makedirs("clean", exist_ok=True)
     csv_file_path = 'clean/2000_cleaned_data.csv'  # Corrected this line
-    save_dir = 'census_data'
 
     # Check if the CSV exists and append the DataFrame
     if os.path.exists(csv_file_path):
@@ -175,12 +176,25 @@ for state_name, state_abbreviation in states:
     else:
         df.to_csv(csv_file_path, index=False)
 
-    # Remove the downloaded and extracted files
-    for root, dirs, files in os.walk(save_dir):
-        for file in files:
-            os.remove(os.path.join(root, file))
+start_time = time.time()
 
-    # Optionally, remove the directory if empty
-    os.rmdir(save_dir)
+with ThreadPoolExecutor(max_workers=16) as executor:
+    futures = [executor.submit(process_state, state_name, state_abbreviation) for state_name, state_abbreviation in states]
 
-    print(f"Data appended to {csv_file_path} and files removed.")
+# Remove the downloaded and extracted files
+csv_file_path = 'clean/2000_cleaned_data.csv'  # Corrected this line
+save_dir = 'census_data'
+for root, dirs, files in os.walk(save_dir):
+    for file in files:
+        os.remove(os.path.join(root, file))
+
+# Optionally, remove the directory if empty
+os.rmdir(save_dir)
+
+# Sort the CSV because the threading puts it out of order
+csv_df = pd.read_csv(csv_file_path)
+df_sorted = csv_df.sort_values(by="State Abv", ascending=True)
+df_sorted.to_csv(csv_file_path, index=False)
+
+print(f"Data appended to {csv_file_path} and files removed.")
+print(f"Program finished in {(time.time() - start_time):.3f}s")
